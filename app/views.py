@@ -67,6 +67,11 @@ def files():
 
 @app.route('/login', methods=['POST', 'GET'])
 def login():
+    if current_user.is_authenticated:
+        flash('Already Logged In.','info')
+        return redirect(url_for('home'))
+    
+
     form = LoginForm()
 
     # change this to actually validate the entire form submission
@@ -93,6 +98,13 @@ def login():
             flash('Username or Password is incorrect.','failure')
 
     return render_template("login.html", form=form)
+
+@app.route("/logout")
+@login_required
+def logout():
+    logout_user()
+    flash('You have been logged out.', 'success')
+    return redirect(url_for('home'))
 
 # user_loader callback. This callback is used to reload the user object from
 # the user ID stored in the session
