@@ -1,6 +1,6 @@
 import os
 from app import app, db, login_manager
-from flask import render_template, request, redirect, url_for, flash, session, abort
+from flask import render_template, request, redirect, url_for, flash, session, abort, send_from_directory
 from flask_login import login_user, logout_user, current_user, login_required
 from werkzeug.utils import secure_filename
 from werkzeug.security import check_password_hash
@@ -11,6 +11,8 @@ from app.forms import LoginForm, UploadForm
 ###
 # Routing for your application.
 ###
+rootdir = os.getcwd()
+
 
 @app.route('/')
 def home():
@@ -30,17 +32,38 @@ def upload():
     # Instantiate your form class
     form = UploadForm()
     # Validate file upload on submit
-    if form.validate_on_submit():
+    if request.method == 'POST':
         # Get file data and save to your uploads folder
-        image = form.photo.data
-        imgname = secure_filename(image.filename)
-        image.save(os.path.join(app.config['UPLOAD_FOLDER'],imgname))
-        flash('File Uploaded', 'success')
+        if not form.validate_on_submit():
+            flash('Error. Wrong file type submitted.')
+            return redirect(url_for('upload'))
+        else:
+            image = form.photo.data
+            imgname = secure_filename(image.filename)
+            image.save(os.path.join(app.config['UPLOAD_FOLDER'],imgname))
+            flash('File Uploaded', 'success')
 
         return redirect(url_for('home')) # Update this to redirect the user to a route that displays all uploaded image files
 
     return render_template('upload.html',form=form)
 
+def get_uploaded_images():
+    imglst = []
+    for subdir,dirs,files in os.walk(os.getcwd() + '/uploads'):
+        for file in files:
+            if file == '.gitkeep':
+                continue
+            imglst.append(os.path.join(file))
+        return imglst
+
+@app.route('/uploads/<filename>')
+def get_image(filename):
+    return send_from_directory(app.config['UPLOAD_FOLDER'],filename)
+
+@app.route('/files')
+@login_required
+def files():
+    return render_template('files.html', images=get_uploaded_images())
 
 @app.route('/login', methods=['POST', 'GET'])
 def login():

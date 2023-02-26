@@ -18,3 +18,15 @@ body {
     border-top-left-radius: 0;
     border-top-right-radius: 0;
 }
+
+.imgview{
+    display: flex;
+    flex-direction: row;
+    flex-wrap: wrap;
+}
+
+.library{
+    width: 25vw;
+    min-height: 30vh;
+    padding: 1em;
+}
